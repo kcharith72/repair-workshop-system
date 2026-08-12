@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+
+  # ─── DATABASES ──────────────────────────────────────────────────────────────
+
+  appointment-db:
+    image: postgres:15
+    container_name: appointment-db
+    environment:
+      POSTGRES_DB: appointment_db
+      POSTGRES_USER: appt_user
+      POSTGRES_PASSWORD: appt_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - appointment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appt_user -d appointment_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  technician-db:
+    image: postgres:15
+    container_name: technician-db
+    environment:
+      POSTGRES_DB: technician_db
+      POSTGRES_USER: tech_user
+      POSTGRES_PASSWORD: tech_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - technician-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tech_user -d technician_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── MESSAGING ──────────────────────────────────────────────────────────────
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"       # AMQP port used by services
+      - "15672:15672"     # Management UI — http://localhost:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── TRACING ────────────────────────────────────────────────────────────────
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"       # Zipkin UI — http://localhost:9411
+
+volumes:
+  appointment-db-data:
+  technician-db-data:
