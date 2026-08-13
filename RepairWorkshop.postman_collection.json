@@ -1,0 +1,407 @@
+{
+	"info": {
+		"name": "Repair Workshop System",
+		"description": "Community Repair Workshop Scheduler - Complete API test collection. The Login request auto-saves the JWT token to a collection variable, so all other requests use it automatically.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userToken",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Auth",
+			"item": [
+				{
+					"name": "Register Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\",\n  \"role\": \"ADMIN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Registers an ADMIN user. Run once."
+					}
+				},
+				{
+					"name": "Register Normal User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user1\",\n  \"password\": \"user123\",\n  \"role\": \"USER\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Registers a normal USER. Run once."
+					}
+				},
+				{
+					"name": "Login as Admin (saves token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.token) {",
+									"    pm.collectionVariables.set('token', json.token);",
+									"    console.log('Admin token saved.');",
+									"}",
+									"pm.test('Login successful', function () {",
+									"    pm.expect(pm.response.code).to.eql(200);",
+									"    pm.expect(json.token).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Logs in as admin. The token is auto-saved to the 'token' collection variable."
+					}
+				},
+				{
+					"name": "Login as Normal User (saves userToken)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.token) {",
+									"    pm.collectionVariables.set('userToken', json.token);",
+									"    console.log('User token saved.');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user1\",\n  \"password\": \"user123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Logs in as normal user. Token saved to 'userToken' for testing 403 forbidden scenarios."
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Technicians",
+			"item": [
+				{
+					"name": "Create Technician - Alice (ADMIN)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice@workshop.com\",\n  \"specialisation\": \"ELECTRONICS\",\n  \"status\": \"AVAILABLE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians"]
+						}
+					}
+				},
+				{
+					"name": "Create Technician - Bob (ADMIN)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Bob Jones\",\n  \"email\": \"bob@workshop.com\",\n  \"specialisation\": \"FURNITURE\",\n  \"status\": \"AVAILABLE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians"]
+						}
+					}
+				},
+				{
+					"name": "Get All Technicians (USER or ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians"]
+						}
+					}
+				},
+				{
+					"name": "Get Technician by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Technician (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Alice Smith-Updated\",\n  \"email\": \"alice@workshop.com\",\n  \"specialisation\": \"ELECTRONICS\",\n  \"status\": \"BUSY\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Technician (ADMIN)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians/2",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians", "2"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Appointments",
+			"item": [
+				{
+					"name": "Create Appointment (triggers Feign call)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerName\": \"John Doe\",\n  \"customerEmail\": \"john@email.com\",\n  \"itemDescription\": \"Broken laptop screen needs replacement urgently\",\n  \"repairCategory\": \"ELECTRONICS\",\n  \"scheduledDate\": \"2027-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments"]
+						},
+						"description": "Creating an appointment triggers a synchronous OpenFeign call to technician-service to find an available technician of the matching specialisation. If found, the appointment is CONFIRMED with that technician assigned."
+					}
+				},
+				{
+					"name": "Get All Appointments (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments"]
+						}
+					}
+				},
+				{
+					"name": "Get Appointment by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Appointment (PUT)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerName\": \"John Doe\",\n  \"customerEmail\": \"john@email.com\",\n  \"itemDescription\": \"Broken laptop screen - updated description here\",\n  \"repairCategory\": \"ELECTRONICS\",\n  \"scheduledDate\": \"2027-02-20\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "1"]
+						}
+					}
+				},
+				{
+					"name": "Mark Appointment COMPLETED (triggers RabbitMQ event)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/1/status?status=COMPLETED",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "1", "status"],
+							"query": [
+								{ "key": "status", "value": "COMPLETED" }
+							]
+						},
+						"description": "Marking COMPLETED publishes a RepairCompletedEvent to RabbitMQ. The technician-service consumes it and increments the technician's completedJobCount and sets status AVAILABLE."
+					}
+				},
+				{
+					"name": "Delete Appointment (ADMIN)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Security Tests (for evidence)",
+			"item": [
+				{
+					"name": "No Token - expect 401",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians"]
+						},
+						"description": "No Authorization header. Should be rejected with 401/403."
+					}
+				},
+				{
+					"name": "USER tries ADMIN action - expect 403",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{userToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Should Fail\",\n  \"email\": \"fail@workshop.com\",\n  \"specialisation\": \"BICYCLES\",\n  \"status\": \"AVAILABLE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians"]
+						},
+						"description": "A normal USER token attempts to create a technician (ADMIN-only). Should return 403 Forbidden. Run 'Login as Normal User' first to populate userToken."
+					}
+				},
+				{
+					"name": "Invalid input - expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"\",\n  \"email\": \"not-an-email\",\n  \"specialisation\": \"ELECTRONICS\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/technicians",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "technicians"]
+						},
+						"description": "Blank name and invalid email. Should return 400 Bad Request with validation messages."
+					}
+				}
+			]
+		}
+	]
+}
